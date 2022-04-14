@@ -1,5 +1,5 @@
 {
-  "name": "lokiswap-v9",
+  "name": "teleswap-subgraph-rinkeby",
   "license": "UNLICENSED",
   "scripts": {
     "codegen": "graph codegen",

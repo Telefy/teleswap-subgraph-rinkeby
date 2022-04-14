@@ -1,5 +1,5 @@
 /* eslint-disable prefer-const */
-import { BigInt, BigDecimal, store, Address } from '@graphprotocol/graph-ts'
+import { BigInt, BigDecimal, store, Address, log } from '@graphprotocol/graph-ts'
 import {
   Pair,
   Token,
@@ -229,29 +229,44 @@ export function handleTransfer(event: Transfer): void {
 }
 
 export function handleSync(event: Sync): void {
-  let pair = Pair.load(event.address.toHex())
+  log.debug("SYNC EVENT 1 -----" + event.params.reserve0.toString(), [])
+  let pair = Pair.load(event.address.toHexString())
   if (pair) {
     let token0 = Token.load(pair.token0)
     let token1 = Token.load(pair.token1)
+    log.debug("SYNC EVENT 2 ----- token 0: " + pair.token0.toString(), [])
+    log.debug("SYNC EVENT 3 ----- token 1: " + pair.token1.toString(), [])
+
     let teleswap = TeleswapFactory.load(FACTORY_ADDRESS)
+    log.debug("SYNC EVENT 4 ----- factory: " + FACTORY_ADDRESS, [])
 
     if (token0 && token1 && teleswap) {
+      log.debug("SYNC EVENT 5 ----- " + pair.trackedReserveETH.toString(), [])
       // reset factory liquidity by subtracting onluy tarcked liquidity
       teleswap.totalLiquidityETH = teleswap.totalLiquidityETH.minus(pair.trackedReserveETH as BigDecimal)
 
+
+      log.debug("SYNC EVENT 6 ----- reserve0: " + pair.reserve0.toString(), [])
       // reset token total liquidity amounts
       if (token0.totalLiquidity)
         token0.totalLiquidity = token0.totalLiquidity.minus(pair.reserve0)
+
+      log.debug("SYNC EVENT 7 ----- reserve1: " + pair.reserve1.toString(), [])
       if (token1.totalLiquidity)
         token1.totalLiquidity = token1.totalLiquidity.minus(pair.reserve1)
 
+      log.debug("SYNC EVENT 8 ----- decimals0: " + token0.decimals.toString(), [])
       if (token0.decimals)
         pair.reserve0 = convertTokenToDecimal(event.params.reserve0, token0.decimals)
+
+      log.debug("SYNC EVENT 9 ----- decimals1: " + token1.decimals.toString(), [])
       if (token1.decimals)
         pair.reserve1 = convertTokenToDecimal(event.params.reserve1, token1.decimals)
 
+      log.debug("SYNC EVENT 10 ----- token0Price: " + pair.reserve0.div(pair.reserve1).toString(), [])
       if (pair.reserve1.notEqual(ZERO_BD)) pair.token0Price = pair.reserve0.div(pair.reserve1)
       else pair.token0Price = ZERO_BD
+      log.debug("SYNC EVENT 11 ----- token1Price: " + pair.reserve1.div(pair.reserve0).toString(), [])
       if (pair.reserve0.notEqual(ZERO_BD)) pair.token1Price = pair.reserve1.div(pair.reserve0)
       else pair.token1Price = ZERO_BD
 
@@ -260,6 +275,7 @@ export function handleSync(event: Sync): void {
       // update ETH price now that reserves could have changed
       let bundle = Bundle.load('1')
       if (bundle) {
+        log.debug("SYNC EVENT 12 ----- bundleEthPrice: " + getEthPriceInUSD().toString(), [])
         bundle.ethPrice = getEthPriceInUSD()
         bundle.save()
 
@@ -268,12 +284,14 @@ export function handleSync(event: Sync): void {
         token0.save()
         token1.save()
 
+
         // get tracked liquidity - will be 0 if neither is in whitelist
         let trackedLiquidityETH: BigDecimal
         if (bundle.ethPrice.notEqual(ZERO_BD)) {
           trackedLiquidityETH = getTrackedLiquidityUSD(pair.reserve0, token0 as Token, pair.reserve1, token1 as Token).div(
             bundle.ethPrice
           )
+          log.debug("SYNC EVENT 13 ----- trackedLiquidityETH: " + trackedLiquidityETH.toString(), [])
         } else {
           trackedLiquidityETH = ZERO_BD
         }
@@ -355,7 +373,7 @@ export function handleMint(event: Mint): void {
     }
 
     // update the LP position
-    let liquidityPosition = createLiquidityPosition(event.address, mint.to as Address)
+    let liquidityPosition = createLiquidityPosition(event.address, Address.fromBytes(mint.to))
     createLiquiditySnapshot(liquidityPosition, event)
 
     // update day entities
@@ -425,8 +443,10 @@ export function handleBurn(event: Burn): void {
         burn.save()
       }
       // update the LP position
-      let liquidityPosition = createLiquidityPosition(event.address, burn.sender as Address)
-      createLiquiditySnapshot(liquidityPosition, event)
+      if (burn.sender) {
+        let liquidityPosition = createLiquidityPosition(event.address, Address.fromBytes(burn.sender))
+        createLiquiditySnapshot(liquidityPosition, event)
+      }
 
       // update day entities
       updatePairDayData(event)
@@ -439,6 +459,7 @@ export function handleBurn(event: Burn): void {
 }
 
 export function handleSwap(event: Swap): void {
+  log.debug("SWAP EVENT -----" + event.params.sender.toHexString(), [])
   let pair = Pair.load(event.address.toHexString())
   if (pair) {
     let token0 = Token.load(pair.token0)

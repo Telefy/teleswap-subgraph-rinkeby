@@ -1,18 +1,18 @@
 import { log } from "@graphprotocol/graph-ts"
 import { PairCreated } from "../../generated/Factory/Factory"
 import { Bundle, Pair, TeleswapFactory, Token } from "../../generated/schema"
-import { fetchTokenDecimals, fetchTokenName, fetchTokenSymbol, fetchTokenTotalSupply, ZERO_BD, ZERO_BI } from "./helpers"
+import { FACTORY_ADDRESS, fetchTokenDecimals, fetchTokenName, fetchTokenSymbol, fetchTokenTotalSupply, ZERO_BD, ZERO_BI } from "./helpers"
 import { Pair as PairTemplate } from '../../generated/templates'
 
 export function handlePairCreated(event: PairCreated): void {
   // Entities can be loaded from the store using a string ID; this ID
   // needs to be unique across all entities of the same type
-  let factory = TeleswapFactory.load(event.transaction.from.toHex())
+  let factory = TeleswapFactory.load(FACTORY_ADDRESS)
 
   // Entities only exist after they have been saved to the store;
   // `null` checks allow to create entities on demand
   if (!factory) {
-    factory = new TeleswapFactory(event.transaction.from.toHex())
+    factory = new TeleswapFactory(FACTORY_ADDRESS)
     factory.pairCount = 0
     factory.totalVolumeETH = ZERO_BD
     factory.totalLiquidityETH = ZERO_BD
@@ -49,7 +49,6 @@ export function handlePairCreated(event: PairCreated): void {
       log.debug('mybug the decimal on token 0 was null', [])
       return
     }
-
     token0.decimals = decimals
     token0.derivedETH = ZERO_BD
     token0.tradeVolume = ZERO_BD
