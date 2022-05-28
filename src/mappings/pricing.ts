@@ -85,7 +85,7 @@ export function findEthPerToken(token: Token): BigDecimal {
       if (pair && pair.token0 == token.id && pair.reserveETH.gt(MINIMUM_LIQUIDITY_THRESHOLD_ETH)) {
         let token1 = Token.load(pair.token1)
         if (token1) {
-          pair.token1Price.times(token1.derivedETH as BigDecimal) // return token1 per our token * Eth per token 1
+          return pair.token1Price.times(token1.derivedETH as BigDecimal) // return token1 per our token * Eth per token 1
         }
         return returnVar;
       }
