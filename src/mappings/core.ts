@@ -443,8 +443,9 @@ export function handleBurn(event: Burn): void {
         burn.save()
       }
       // update the LP position
-      if (burn.sender) {
-        let liquidityPosition = createLiquidityPosition(event.address, Address.fromBytes(burn.sender))
+      const burnSender = burn.sender
+      if (burnSender) {
+        let liquidityPosition = createLiquidityPosition(event.address, Address.fromBytes(burnSender))
         createLiquiditySnapshot(liquidityPosition, event)
       }
 
@@ -459,7 +460,12 @@ export function handleBurn(event: Burn): void {
 }
 
 export function handleSwap(event: Swap): void {
-  log.debug("SWAP EVENT -----" + event.params.sender.toHexString(), [])
+  log.info('SWAP EVENT ----- {} {} {} {}', [
+    event.params.amount0In.toString(),
+    event.params.amount1In.toString(),
+    event.params.amount0Out.toString(),
+    event.params.amount1Out.toString(),
+  ])
   let pair = Pair.load(event.address.toHexString())
   if (pair) {
     let token0 = Token.load(pair.token0)
