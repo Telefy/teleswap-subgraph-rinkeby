@@ -8,7 +8,7 @@ import { TokenDefinition } from './tokenDefinition'
 import { Bundle, LiquidityPosition, LiquidityPositionSnapshot, Pair, Token, User } from '../../generated/schema'
 
 export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
-export const FACTORY_ADDRESS = '0xeed9852d9c757a06495e4d18e66bd93e37aaab86'
+export const FACTORY_ADDRESS = '0x678e6a7ebf554677e7387784ebd46047d05ec13e'
 
 export let ZERO_BI = BigInt.fromI32(0)
 export let ONE_BI = BigInt.fromI32(1)
